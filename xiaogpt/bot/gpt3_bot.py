@@ -23,8 +23,8 @@ class GPT3Bot(BaseBot):
     async def ask(self, query, **options):
         data = {
             "prompt": query,
-            "model": "text-davinci-003",
-            "max_tokens": 1024,
+            "model": "gpt-4",
+            "max_tokens": 4096,
             "temperature": 1,
             "top_p": 1,
             **options,
@@ -40,9 +40,9 @@ class GPT3Bot(BaseBot):
     async def ask_stream(self, query, **options):
         data = {
             "prompt": query,
-            "model": "text-davinci-003",
-            "max_tokens": 1024,
-            "temperature": 1,
+            "model": "gpt-4",
+            "max_tokens": 4096,
+            "temperature": 0.7,
             "top_p": 1,
             "stream": True,
             **options,

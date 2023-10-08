@@ -8,7 +8,7 @@ from xiaogpt.utils import split_sentences
 
 
 class ChatGPTBot(BaseBot):
-    default_options = {"model": "gpt-3.5-turbo-0613"}
+    default_options = {"model": "gpt-4"}
 
     def __init__(
         self,
@@ -73,7 +73,7 @@ class ChatGPTBot(BaseBot):
             ms.append({"role": "user", "content": h[0]})
             ms.append({"role": "assistant", "content": h[1]})
         ms.append({"role": "user", "content": f"{query}"})
-        kwargs = {"model": "gpt-3.5-turbo", **options}
+        kwargs = {**self.default_options, **options}
         if openai.api_type == "azure":
             kwargs["deployment_id"] = self.deployment_id
         try:

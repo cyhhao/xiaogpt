@@ -205,9 +205,8 @@ class MiGPT:
     def need_ask_gpt(self, record):
         query = record.get("query", "")
         return (
-            self.in_conversation
-            and not query.startswith(WAKEUP_KEYWORD)
-            or query.startswith(tuple(self.config.keyword))
+            not query.startswith(WAKEUP_KEYWORD)
+            and not query.startswith(tuple(self.config.keyword))
         )
 
     def need_change_prompt(self, record):
@@ -300,7 +299,7 @@ class MiGPT:
         httpd = ThreadedHTTPServer(("", self.port), handler)
         # start the server in a new thread
         server_thread = threading.Thread(target=httpd.serve_forever)
-        server_thread.daemon = True
+        server_thread.daemon = False
         server_thread.start()
 
         self.hostname = get_hostname()
@@ -338,6 +337,7 @@ class MiGPT:
             async for text in text_stream:
                 try:
                     url, duration = await self.text2mp3(text, tts_lang)
+                    print("tts:", url)
                 except Exception:
                     self.log.exception("haha")
                     continue
@@ -360,9 +360,9 @@ class MiGPT:
 
     @staticmethod
     def _normalize(message):
-        message = message.strip().replace(" ", "--")
-        message = message.replace("\n", "，")
-        message = message.replace('"', "，")
+        # message = message.strip().replace(" ", "--")
+        # message = message.replace("\n", "，")
+        # message = message.replace('"', "，")
         return message
 
     async def ask_gpt(self, query):
@@ -440,7 +440,7 @@ class MiGPT:
             await self.init_all_data(session)
             task = asyncio.create_task(self.poll_latest_ask())
             assert task is not None  # to keep the reference to task, do not remove this
-            print(f"Running xiaogpt now, 用`{'/'.join(self.config.keyword)}`开头来提问")
+            print(f"Running xiaogpt now, 用`{'/'.join(self.config.keyword)}`开头来触发原版小爱")
             print(f"或用`{self.config.start_conversation}`开始持续对话")
             while True:
                 self.polling_event.set()
@@ -478,22 +478,23 @@ class MiGPT:
 
                 print("-" * 20)
                 print("问题：" + query + "？")
+                await self.do_tts(f"。")
                 if not self.chatbot.history:
-                    query = f"{query}，{self.config.prompt}"
+                    query = f"{query}{self.config.prompt}"
                 if self.config.mute_xiaoai:
                     await self.stop_if_xiaoai_is_playing()
                 else:
                     # waiting for xiaoai speaker done
                     await asyncio.sleep(8)
-                await self.do_tts(f"正在问{ask_name}请耐心等待")
+                # await self.do_tts(f" ") # 正在问{ask_name}请耐心等待
                 try:
                     print(
-                        "以下是小爱的回答: ",
+                        "以下是小爱的回答: \n",
                         new_record.get("answers", [])[0].get("tts", {}).get("text"),
                     )
                 except IndexError:
                     print("小爱没回")
-                print(f"以下是 {ask_name} 的回答: ", end="")
+                print(f"\n以下是 {ask_name} 的回答: \n", end="")
                 try:
                     if not self.config.enable_edge_tts:
                         async for message in self.ask_gpt(query):
